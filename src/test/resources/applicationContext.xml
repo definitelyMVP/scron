@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task-3.0.xsd">
+
+    <bean id="leaderElector" class="def.mvp.scron.LeaderElector"
+          init-method="register" destroy-method="destroy">
+        <constructor-arg name="zkConnectionString">
+            <value>10.12.136.235:2181</value>
+        </constructor-arg>
+        <constructor-arg name="zkSessionTimeout">
+            <value>60000</value>
+        </constructor-arg>
+        <constructor-arg name="ephemeralZnodeParent">
+            <value>/cron</value>
+        </constructor-arg>
+        <constructor-arg name="ephemeralZnodeNamePrefix">
+            <value>cron-server-</value>
+        </constructor-arg>
+    </bean>
+
+    <bean id="scheduler" class="def.mvp.scron.SingleNodeTaskScheduler">
+        <property name="poolSize" value="10"/>
+        <property name="leaderElector" ref="leaderElector"/>
+    </bean>
+
+    <bean id="taskObj" class="scron.SimpleTask"/>
+
+    <task:scheduled-tasks scheduler="scheduler">
+        <task:scheduled ref="taskObj" method="print" fixed-rate="5000"/>
+    </task:scheduled-tasks>
+
+</beans>
